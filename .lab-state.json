@@ -5,5 +5,14 @@
   "publisherPrefix": "lab",
   "repo": "glendaml616-gif/lab",
   "mainRulesetId": 25828842,
-  "mainRulesetName": "lab-main-protection"
+  "mainRulesetName": "lab-main-protection",
+  "randomIdentifier": 7460,
+  "devEnvUrl": "https://wm-dev-7460.crm.dynamics.com",
+  "devEnvId": "4c12841d-b656-eafd-b703-b2246464911c",
+  "devOrgId": "6b7c3787-98d0-f111-be87-000d3a5cb40c",
+  "devProfile": "dev",
+  "testEnvUrl": "https://wm-test-7460.crm.dynamics.com",
+  "testEnvId": "c0bd238d-6cfb-e3d6-a99d-acd43100e311",
+  "testOrgId": "138f95f9-9ad0-f111-be87-000d3a5cb42c",
+  "testProfile": "test"
 }
