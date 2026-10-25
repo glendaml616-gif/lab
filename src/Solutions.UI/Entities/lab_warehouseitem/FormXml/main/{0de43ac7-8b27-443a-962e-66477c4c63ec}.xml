@@ -1,0 +1,201 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <systemform>
+    <formid>{0de43ac7-8b27-443a-962e-66477c4c63ec}</formid>
+    <IntroducedVersion>1.0.0.0</IntroducedVersion>
+    <FormPresentation>1</FormPresentation>
+    <FormActivationState>1</FormActivationState>
+    <form shownavigationbar="false" headerdensity="HighWithControls" showImage="false">
+      <tabs>
+        <tab verticallayout="true" id="{873fd8de-88d3-45a9-b317-5be65daef475}" IsUserDefined="1" name="general" labelid="{fc784fe2-c39c-412b-9368-72d14a7995b3}">
+          <labels>
+            <label description="General" languagecode="1033" />
+          </labels>
+          <columns>
+            <column width="100%">
+              <sections>
+                <section showlabel="true" showbar="false" IsUserDefined="0" id="{5da28955-b769-446b-ad82-f9e7cc5c2409}" labelid="{0e0b109b-7113-4b61-b155-2ebffcc3c1b0}" name="general">
+                  <labels>
+                    <label description="GENERAL" languagecode="1033" />
+                  </labels>
+                  <rows>
+                    <row>
+                      <cell id="{A61E5792-02DF-48C6-99DE-5E04DC7DD38C}" labelid="{22563B0E-8758-46C7-8248-7DF409EA154B}">
+                        <labels>
+                          <label description="Name" languagecode="1033" />
+                        </labels>
+                        <control id="lab_name" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="lab_name" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{35785B2B-0FC8-43AC-B336-983FAC52F025}" labelid="{1DA3409D-E5EC-4AD4-9932-7FA1A6C9ECBB}">
+                        <labels>
+                          <label description="SKU" languagecode="1033" />
+                        </labels>
+                        <control id="lab_sku" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="lab_sku" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{0D163BEC-E31B-404B-BDD8-B1A656D06D39}" labelid="{F7488626-FEC3-4D5D-87E5-3214C21E5375}">
+                        <labels>
+                          <label description="Available Quantity" languagecode="1033" />
+                        </labels>
+                        <control id="lab_availablequantity" classid="{C3EFE0C3-0EC6-42be-8349-CBD9079DFD8E}" datafieldname="lab_availablequantity" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{67A16D31-465D-4C82-BE34-F1D4660B0772}" labelid="{542E252F-9A56-416A-8B54-ADF9E7ED557A}">
+                        <labels>
+                          <label description="Location" languagecode="1033" />
+                        </labels>
+                        <control id="lab_locationid" classid="{270BD3DB-D9AF-4782-9025-509E298DEC0A}" datafieldname="lab_locationid" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{F5A47448-E719-482C-80CF-9BBFF8353451}" labelid="{E8D7CA96-0F3D-42B7-9D6A-9B7850FC1CE0}">
+                        <labels>
+                          <label description="Description" languagecode="1033" />
+                        </labels>
+                        <control id="lab_description" classid="{E0DECE4B-6FC8-4a8f-A065-082708572369}" datafieldname="lab_description" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{5472416C-8B69-481D-B9E1-AC0D299F4A15}" labelid="{002EFFAF-A9D2-413F-81C3-A0AE5DFD0D5E}">
+                        <labels>
+                          <label description="Unit Price" languagecode="1033" />
+                        </labels>
+                        <control id="lab_unitprice" classid="{533B9E00-756B-4312-95A0-DC888637AC78}" datafieldname="lab_unitprice" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{1547A176-D123-44F6-9354-5C35D52A948C}" labelid="{3EA9B57A-B7E5-4632-97BF-A4930620FC3A}">
+                        <labels>
+                          <label description="Weight (kg)" languagecode="1033" />
+                        </labels>
+                        <control id="lab_weight" classid="{C3EFE0C3-0EC6-42be-8349-CBD9079DFD8E}" datafieldname="lab_weight" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{84217312-ACEF-4F4D-BCCA-67BDA6528425}" labelid="{B4286206-7857-446B-ABE4-DCF7148ADAD2}">
+                        <labels>
+                          <label description="Category" languagecode="1033" />
+                        </labels>
+                        <control id="lab_category" classid="{3EF39988-22BB-4F0B-BBBE-64B5A3748AEE}" datafieldname="lab_category" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{C6F14723-8EB6-4ADE-B8CE-78BCC9F3764D}" labelid="{F315B059-0CDB-418B-AEE9-15DB936C56CC}">
+                        <labels>
+                          <label description="Is Perishable" languagecode="1033" />
+                        </labels>
+                        <control id="lab_isperishable" classid="{3EF39988-22BB-4F0B-BBBE-64B5A3748AEE}" datafieldname="lab_isperishable" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{FCEBB0E7-0FB5-4AF0-B022-68CC88897365}" labelid="{76BDA251-FA4D-41DE-86D7-C5408160C1B1}">
+                        <labels>
+                          <label description="Expiration Date" languagecode="1033" />
+                        </labels>
+                        <control id="lab_expirationdate" classid="{5B773807-9FB2-42db-97C3-7A91EFF8ADFF}" datafieldname="lab_expirationdate" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{56AB3C8D-B317-4CE3-9074-9A893EA007B3}" labelid="{2F7E8B27-D8AD-433D-AD9D-9ED3DA15B789}">
+                        <labels>
+                          <label description="Barcode" languagecode="1033" />
+                        </labels>
+                        <control id="lab_barcode" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="lab_barcode" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{D659F10C-4428-4DA1-AC6F-528DBF896EAF}" labelid="{014BD650-53C0-4314-8109-17BDF25A7738}">
+                        <labels>
+                          <label description="Reorder Point" languagecode="1033" />
+                        </labels>
+                        <control id="lab_reorderpoint" classid="{C3EFE0C3-0EC6-42be-8349-CBD9079DFD8E}" datafieldname="lab_reorderpoint" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell locklevel="0" id="{E1D0C9D2-6AE5-496A-9034-E3209D44E3D9}" rowspan="4" colspan="1" auto="false" showlabel="false">
+                        <labels>
+                          <label description="Warehouse Transactions" languagecode="1033" />
+                        </labels>
+                        <control indicationOfSubgrid="true" id="subgrid" classid="{E7A81278-8635-4D9E-8D4D-59480B391C5B}" uniqueid="{8B9AC34D-A0A7-4C90-9600-0DD2B0C2E527}">
+                          <parameters>
+                            <RecordsPerPage>4</RecordsPerPage>
+                            <AutoExpand>Fixed</AutoExpand>
+                            <EnableQuickFind>false</EnableQuickFind>
+                            <EnableViewPicker>false</EnableViewPicker>
+                            <EnableChartPicker>true</EnableChartPicker>
+                            <ChartGridMode>All</ChartGridMode>
+                            <TargetEntityType>lab_warehousetransaction</TargetEntityType>
+                            <ViewId>{73a3a223-8d5b-46db-862e-6a6afa72799a}</ViewId>
+                            <ViewIds>{73a3a223-8d5b-46db-862e-6a6afa72799a}</ViewIds>
+                            <RelationshipName>lab_lab_warehouseitem_lab_warehousetransaction_itemid</RelationshipName>
+                          </parameters>
+                        </control>
+                      </cell>
+                    </row>
+                  </rows>
+                </section>
+              </sections>
+            </column>
+          </columns>
+        </tab>
+      </tabs>
+      <header id="{868730f6-e06e-4a50-ab54-aa09f75233f0}" celllabelposition="Top" columns="111" labelwidth="115" celllabelalignment="Left">
+        <rows>
+          <row>
+            <cell id="{0a47bd0a-fd0f-410e-b1e1-756f37e6eb4d}" showlabel="false" labelid="{c5c4b643-9554-4599-a6d9-5a9129a5df4f}">
+              <labels>
+                <label description="" languagecode="1033" />
+              </labels>
+            </cell>
+            <cell id="{a96385f3-2466-4e31-a366-daf4dd93e589}" showlabel="false" labelid="{fbe37f57-fd64-42f6-9299-40a09f4e22f5}">
+              <labels>
+                <label description="" languagecode="1033" />
+              </labels>
+            </cell>
+            <cell id="{cd0e8349-d653-4621-8670-82cfd9b2caf8}" showlabel="false" labelid="{098b4663-6699-42b9-a2f1-fc2f935e7690}">
+              <labels>
+                <label description="" languagecode="1033" />
+              </labels>
+            </cell>
+          </row>
+        </rows>
+      </header>
+      <footer id="{7991337a-9b0e-4e9c-92f6-0e5b132273fd}" celllabelposition="Top" columns="111" labelwidth="115" celllabelalignment="Left">
+        <rows>
+          <row>
+            <cell id="{05152cab-e706-49d7-82c8-f1df3cf97db2}" showlabel="false" labelid="{a97d5f56-75ce-4b13-a646-c6372e0e387f}">
+              <labels>
+                <label description="" languagecode="1033" />
+              </labels>
+            </cell>
+            <cell id="{a98d852a-b1f9-4a96-bcc6-48077e1fe5aa}" showlabel="false" labelid="{7c5a8e01-0360-4f75-a680-45529a4db7bc}">
+              <labels>
+                <label description="" languagecode="1033" />
+              </labels>
+            </cell>
+            <cell id="{9ed1ae08-f264-4a72-9edb-4bf5b731fb24}" showlabel="false" labelid="{e8f79c0a-e831-403c-8ce7-d71b12a10bfe}">
+              <labels>
+                <label description="" languagecode="1033" />
+              </labels>
+            </cell>
+          </row>
+        </rows>
+      </footer>
+      <DisplayConditions Order="1" FallbackForm="true">
+        <Everyone />
+      </DisplayConditions>
+    </form>
+    <IsCustomizable>1</IsCustomizable>
+    <CanBeDeleted>1</CanBeDeleted>
+    <LocalizedNames>
+      <LocalizedName description="Generated Form" languagecode="1033" />
+    </LocalizedNames>
+    <Descriptions>
+      <Description description="Main form" languagecode="1033" />
+    </Descriptions>
+  </systemform>
+</forms>
