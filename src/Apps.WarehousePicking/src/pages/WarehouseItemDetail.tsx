@@ -1,19 +1,32 @@
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { BrowserMultiFormatReader } from "@zxing/browser";
 import { Lab_warehouseitemsService } from "@/generated/services/Lab_warehouseitemsService";
 import { Lab_warehousetransactionsService } from "@/generated/services/Lab_warehousetransactionsService";
 import { Lab_warehouselocationsService } from "@/generated/services/Lab_warehouselocationsService";
+import { Lab_productsService } from "@/generated/services/Lab_productsService";
+import { OpenFoodFactsService } from "@/generated/services/OpenFoodFactsService";
 import type { Lab_warehousetransactions } from "@/generated/models/Lab_warehousetransactionsModel";
 import type { Lab_warehouselocations } from "@/generated/models/Lab_warehouselocationsModel";
+import type { Product } from "@/generated/models/OpenFoodFactsModel";
+import type { Lab_products } from "@/generated/models/Lab_productsModel";
 import { categoryOptionMetadata, statusOptions, transactionTypeOptionMetadata } from "@/utils/OptionSets";
 import {
   Body1,
   Button,
+  Dialog,
+  DialogActions,
+  DialogBody,
+  DialogContent,
+  DialogSurface,
+  DialogTitle,
+  Input,
   Skeleton,
   SkeletonItem,
+  Text,
 } from "@fluentui/react-components";
-import { ArrowLeftRegular } from "@fluentui/react-icons";
+import { ArrowLeftRegular, CameraRegular, SearchRegular } from "@fluentui/react-icons";
 import type { IColumn } from "@talxis/client-libraries";
 import { RecordDetailForm } from "@/components/RecordDetailForm";
 import { RecordFormDialog } from "@/components/RecordFormDialog";
@@ -55,8 +68,23 @@ const itemFields: FormField[] = [
   { column: { name: "lab_availablequantity", displayName: "Available Quantity", dataType: "Whole.None" }, disabled: true, testId: "item-detail-qty" },
   { column: { name: "lab_category", displayName: "Category", dataType: "OptionSet", metadata: { OptionSet: categoryOptionMetadata } as IColumn["metadata"] }, required: true },
   { column: { name: "lab_locationid", displayName: "Location", dataType: "SingleLine.Text" }, lookupEntity: "lab_warehouselocation" },
+  { column: { name: "lab_productid", displayName: "Product", dataType: "SingleLine.Text" }, lookupEntity: "lab_product" },
   { column: { name: "statecode", displayName: "Status", dataType: "OptionSet", metadata: { OptionSet: statusOptions } as IColumn["metadata"] }, disabled: true },
 ];
+
+const toBlob = (value: unknown): Blob | null => {
+  if (value instanceof Blob) return value;
+  if (value instanceof ArrayBuffer) return new Blob([value]);
+  if (typeof value === "string") {
+    try {
+      const bytes = Uint8Array.from(value, (char) => char.charCodeAt(0));
+      return new Blob([bytes]);
+    } catch {
+      return null;
+    }
+  }
+  return null;
+};
 
 export default function WarehouseItemDetailPage() {
   const styles = useStyles();
@@ -65,6 +93,14 @@ export default function WarehouseItemDetailPage() {
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [barcodeDialogOpen, setBarcodeDialogOpen] = useState(false);
+  const [barcodeInput, setBarcodeInput] = useState("");
+  const [barcodePreview, setBarcodePreview] = useState<Product | null>(null);
+  const [barcodePreviewImage, setBarcodePreviewImage] = useState<string | undefined>();
+  const [barcodeMessage, setBarcodeMessage] = useState<string | null>(null);
+  const [barcodeLoading, setBarcodeLoading] = useState(false);
+  const [barcodeLinking, setBarcodeLinking] = useState(false);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
 
   const { data: item, isLoading: itemLoading } = useQuery({
     queryKey: ["warehouseItem", id],
@@ -73,6 +109,16 @@ export default function WarehouseItemDetailPage() {
       return result.data;
     },
     enabled: !!id,
+  });
+
+  const { data: linkedProduct } = useQuery({
+    queryKey: ["linkedProduct", item?._lab_productid_value],
+    queryFn: async () => {
+      if (!item?._lab_productid_value) return null;
+      const result = await serviceResult(Lab_productsService.get(item._lab_productid_value));
+      return result.data;
+    },
+    enabled: !!item?._lab_productid_value,
   });
 
   const { data: transactions } = useQuery({
@@ -105,6 +151,17 @@ export default function WarehouseItemDetailPage() {
     },
   });
 
+  const { data: products } = useQuery({
+    queryKey: ["products"],
+    queryFn: async () => {
+      const result = await serviceResult(Lab_productsService.getAll({
+        select: ["lab_productid", "lab_name"],
+        orderBy: ["lab_name asc"],
+      }));
+      return result.data ?? [];
+    },
+  });
+
   const transactionRows = useMemo(
     () =>
       transactions?.map((tx: Lab_warehousetransactions) => ({
@@ -124,6 +181,109 @@ export default function WarehouseItemDetailPage() {
     [locations]
   );
 
+  const productRecords = useMemo(
+    () =>
+      (products ?? []).map((product: Lab_products) => ({
+        id: product.lab_productid,
+        name: product.lab_name ?? "",
+      })),
+    [products]
+  );
+
+  const fetchProductImage = useCallback(async (imageUrl: string): Promise<string | undefined> => {
+    try {
+      const result = await serviceResult(OpenFoodFactsService.GetProductImage(imageUrl));
+      const blob = toBlob(result.data);
+      if (!blob) return undefined;
+      return URL.createObjectURL(blob);
+    } catch {
+      return undefined;
+    }
+  }, []);
+
+  const handleLookupBarcode = useCallback(
+    async (providedBarcode?: string) => {
+      const nextBarcode = (providedBarcode ?? barcodeInput).trim();
+      if (!nextBarcode) {
+        setBarcodeMessage("Enter a barcode to look up.");
+        setBarcodePreview(null);
+        setBarcodePreviewImage(undefined);
+        return;
+      }
+
+      setBarcodeLoading(true);
+      setBarcodeMessage(null);
+      setBarcodePreview(null);
+      setBarcodePreviewImage(undefined);
+
+      try {
+        const result = await serviceResult(OpenFoodFactsService.GetProductByBarcode(nextBarcode));
+        setBarcodeInput(nextBarcode);
+        setBarcodePreview(result.data ?? null);
+
+        if (result.data?.imageUrl) {
+          const imageUrl = await fetchProductImage(result.data.imageUrl);
+          setBarcodePreviewImage(imageUrl);
+        }
+      } catch (error) {
+        setBarcodePreview(null);
+        setBarcodePreviewImage(undefined);
+        const message = errorText(error);
+        setBarcodeMessage(message);
+      } finally {
+        setBarcodeLoading(false);
+      }
+    },
+    [barcodeInput, fetchProductImage]
+  );
+
+  useEffect(() => {
+    if (!barcodeDialogOpen || !videoRef.current) return;
+
+    const codeReader = new BrowserMultiFormatReader();
+    let stream: MediaStream | undefined;
+    let stopped = false;
+    let scannerControls: { stop: () => void } | undefined;
+
+    const startCamera = async () => {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "environment" },
+          audio: false,
+        });
+
+        if (!videoRef.current || stopped) {
+          stream.getTracks().forEach((track) => track.stop());
+          return;
+        }
+
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+        scannerControls = await codeReader.decodeFromVideoDevice(undefined, videoRef.current, (result) => {
+          if (!result || stopped) return;
+          const scannedText = result.getText();
+          if (scannedText) {
+            void handleLookupBarcode(scannedText);
+          }
+        });
+      } catch {
+        // No camera available: the manual input path remains available.
+      }
+    };
+
+    void startCamera();
+
+    return () => {
+      stopped = true;
+      scannerControls?.stop();
+      BrowserMultiFormatReader.releaseAllStreams();
+      stream?.getTracks().forEach((track) => track.stop());
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
+    };
+  }, [barcodeDialogOpen, handleLookupBarcode]);
+
   // The item as the detail form's record: reloads the form whenever the item is refetched
   const itemRecord = useMemo(
     () =>
@@ -136,6 +296,7 @@ export default function WarehouseItemDetailPage() {
               lab_availablequantity: toNumber(item.lab_availablequantity),
               lab_category: toNumber(item.lab_category),
               lab_locationid: item._lab_locationid_value ?? null,
+              lab_productid: item._lab_productid_value ?? null,
               statecode: Number(item.statecode),
             },
           }
@@ -156,6 +317,11 @@ export default function WarehouseItemDetailPage() {
           ? `/lab_warehouselocations(${values.lab_locationid})`
           : null;
       }
+      if ("lab_productid" in values) {
+        payload["lab_productid@odata.bind"] = values.lab_productid
+          ? `/lab_products(${values.lab_productid})`
+          : null;
+      }
       if (Object.keys(payload).length === 0) return;
       return serviceResult(Lab_warehouseitemsService.update(id!, servicePayload(payload)));
     },
@@ -169,6 +335,75 @@ export default function WarehouseItemDetailPage() {
       toast.error("Failed to save item: " + errorText(err));
     },
   });
+
+  const handleLinkToItem = useCallback(async () => {
+    if (!id || !barcodePreview) {
+      return;
+    }
+
+    setBarcodeLinking(true);
+    setBarcodeMessage(null);
+
+    try {
+      const barcode = barcodeInput.trim();
+      const productMatches = await serviceResult(
+        Lab_productsService.getAll({
+          select: ["lab_productid", "lab_ean", "lab_name"],
+          filter: `lab_ean eq '${barcode}'`,
+        })
+      );
+
+      let productId = productMatches.data?.[0]?.lab_productid;
+      if (!productId) {
+        const createdProduct = await serviceResult(
+          Lab_productsService.create(servicePayload({
+            lab_name: barcodePreview.name || barcode,
+            lab_ean: barcode,
+            lab_brand: barcodePreview.brand ?? undefined,
+            lab_quantity: barcodePreview.quantity ?? undefined,
+            lab_imageurl: barcodePreview.imageUrl ?? undefined,
+            lab_lastsyncedon: new Date().toISOString(),
+          }))
+        );
+        productId = createdProduct.data?.lab_productid;
+      }
+
+      if (!productId) {
+        throw new Error("Unable to create or find the linked product.");
+      }
+
+      await serviceResult(
+        Lab_warehouseitemsService.update(id, servicePayload({
+          "lab_productid@odata.bind": `/lab_products(${productId})`,
+        }))
+      );
+
+      const imageToSave = barcodePreviewImage ?? (barcodePreview.imageUrl ? await fetchProductImage(barcodePreview.imageUrl) : undefined);
+      if (imageToSave) {
+        try {
+          const imageBlob = await fetch(barcodePreviewImage ?? imageToSave).then((response) => response.blob());
+          await serviceResult(
+            Lab_productsService.update(productId, servicePayload({
+              lab_productimage: imageBlob,
+            }))
+          );
+        } catch (imageError) {
+          toast.warning("Product linked, but the image could not be saved: " + errorText(imageError));
+        }
+      }
+
+      await queryClient.invalidateQueries();
+      setBarcodeDialogOpen(false);
+      setBarcodePreview(null);
+      setBarcodePreviewImage(undefined);
+      setBarcodeInput("");
+      toast.success("Product linked to item");
+    } catch (error) {
+      toast.error("Failed to link product: " + errorText(error));
+    } finally {
+      setBarcodeLinking(false);
+    }
+  }, [barcodeInput, barcodePreview, barcodePreviewImage, fetchProductImage, id, queryClient, toast]);
 
   const createTxMutation = useMutation({
     mutationFn: async (values: Record<string, unknown>) => {
@@ -226,8 +461,29 @@ export default function WarehouseItemDetailPage() {
             columnCount={3}
             title={item.lab_name ?? ""}
             onBack={() => navigate("/items")}
-            lookupRecords={{ lab_locationid: locationRecords }}
+            lookupRecords={{ lab_locationid: locationRecords, lab_productid: productRecords }}
             onSave={(values) => updateItemMutation.mutateAsync(values)}
+            headerExtras={
+              <div className={styles.inline}>
+                {(linkedProduct || barcodePreview) && (
+                  <div className={styles.productSummary}>
+                    <img
+                      className={styles.productImage}
+                      src={barcodePreviewImage ?? linkedProduct?.lab_imageurl}
+                      alt={barcodePreview?.name ?? linkedProduct?.lab_name ?? "Product image"}
+                    />
+                    <Text>{barcodePreview?.name ?? linkedProduct?.lab_name ?? "Product"}</Text>
+                  </div>
+                )}
+                <Button
+                  appearance="secondary"
+                  icon={<CameraRegular />}
+                  onClick={() => setBarcodeDialogOpen(true)}
+                >
+                  {linkedProduct ? "Rescan Barcode" : "Scan Barcode"}
+                </Button>
+              </div>
+            }
             tabs={[
               {
                 id: "transactions",
@@ -260,6 +516,68 @@ export default function WarehouseItemDetailPage() {
         pending={createTxMutation.isPending}
         submitTestId="submit-transaction"
       />
+
+      <Dialog open={barcodeDialogOpen} onOpenChange={(_, data) => setBarcodeDialogOpen(data.open)}>
+        <DialogSurface className={styles.scanDialog}>
+          <DialogBody>
+            <DialogTitle>{linkedProduct ? "Rescan Barcode" : "Scan Barcode"}</DialogTitle>
+            <DialogContent>
+              <div className={styles.cameraFrame}>
+                <video ref={videoRef} className={styles.cameraVideo} autoPlay playsInline muted />
+              </div>
+
+              <div className={styles.inline} style={{ marginTop: "16px" }}>
+                <Input
+                  value={barcodeInput}
+                  onChange={(_, data) => setBarcodeInput(data.value)}
+                  placeholder="Type or scan a barcode"
+                  aria-label="Barcode"
+                  style={{ flex: 1 }}
+                />
+                <Button
+                  appearance="primary"
+                  icon={<SearchRegular />}
+                  onClick={() => void handleLookupBarcode()}
+                  disabled={barcodeLoading}
+                >
+                  {barcodeLoading ? "Looking up..." : "Look Up"}
+                </Button>
+              </div>
+
+              {barcodeMessage && <Text className={styles.errorText}>{barcodeMessage}</Text>}
+
+              {barcodePreview && (
+                <div className={styles.scanSummary} style={{ marginTop: "16px" }}>
+                  <div>
+                    <Text weight="semibold">{barcodePreview.name ?? "Product"}</Text>
+                    {barcodePreview.brand && <div>{barcodePreview.brand}</div>}
+                    {barcodePreview.quantity && <div>{barcodePreview.quantity}</div>}
+                  </div>
+                  {(barcodePreviewImage || barcodePreview.imageUrl) && (
+                    <img
+                      className={styles.scanImage}
+                      src={barcodePreviewImage ?? barcodePreview.imageUrl}
+                      alt={barcodePreview.name ?? "Product"}
+                    />
+                  )}
+                </div>
+              )}
+            </DialogContent>
+            <DialogActions>
+              <Button appearance="secondary" onClick={() => setBarcodeDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                appearance="primary"
+                onClick={() => void handleLinkToItem()}
+                disabled={!barcodePreview || barcodeLinking}
+              >
+                {barcodeLinking ? "Linking..." : "Link to Item"}
+              </Button>
+            </DialogActions>
+          </DialogBody>
+        </DialogSurface>
+      </Dialog>
     </div>
   );
 }
